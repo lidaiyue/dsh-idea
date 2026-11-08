@@ -1,0 +1,6 @@
+# dsh-idea bundle patch: mounts the code editor into any DSH
+# profile that lists this package in `dsh.profile.bundles`
+# (or installs it via `dsh plugin add`).
+- insert:
+    - id: code-editor
+      name: 'dsh-idea'
