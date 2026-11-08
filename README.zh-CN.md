@@ -6,8 +6,6 @@ DSH 右栏里的极简 IDEA。
 
 用 Agent 同时推进几个项目时，拖慢你的往往不是模型，而是旁边那个越开越沉的 IDEA：切窗口、等索引。dsh-idea 把文件、编辑、跳转和多仓库 Git 放进 DeepSeek Harness 的右栏。Agent 在写，你在同一块屏幕上看、改、提交，不用为了看一眼代码再跳回 IDEA。它跑在 PWA 里，几乎不额外占资源，就是为了在这条工作流里把 IDEA 换掉。
 
-![编辑器与文件树](screenshots/editor.webp)
-
 ![搜索文件与 Git](screenshots/search-git.webp)
 
 ## 安装

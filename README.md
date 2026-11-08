@@ -6,8 +6,6 @@ A minimal IDEA in the DeepSeek Harness right column.
 
 When several agents are moving several projects at once, the slow part is usually not the model. It is the IDE you keep leaving for: another window, another index, another copy of IDEA per repo, and your grip on the code breaks. dsh-idea puts the files, the editor, navigation, and multi-repo Git in the DeepSeek Harness right column. The agent writes; you read, edit, and commit on the same screen, without jumping back to IDEA for a look. It runs in the PWA, adds almost no weight, and exists to take IDEA out of this workflow.
 
-![Editor and file tree](screenshots/editor.webp)
-
 ![File search and Git](screenshots/search-git.webp)
 
 ## Install
