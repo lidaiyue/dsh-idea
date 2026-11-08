@@ -31,7 +31,7 @@ Restart `dsh web`, then refresh the page.
   - Java: install `jdtls`
   - Lua: install `lua-language-server`
 - Git: branches and history, diff, commit, pull, and push. The workspace root is included when it is a repository. Immediate child directories with their own `.git` are listed too, and the panel switches between them
-- Shortcuts: open the list from the status bar, click a binding to record it, or clear and restore the default
+- Shortcuts: open the list from the status bar, click a binding to record it, or clear and restore the default. Bindings stay in this plugin and do not depend on another one
 - Select text in a file and mention that range in chat with a shortcut (default `⌥⌘I` / `Ctrl+Alt+I`). With no selection, the shortcut mentions the current file
 
 ## License
