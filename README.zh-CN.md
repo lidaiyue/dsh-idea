@@ -1,10 +1,14 @@
-# dsh-idea
+dsh-idea
 
 [English](README.md) | 中文
 
 DSH 右栏里的极简 IDEA。
 
 用 Agent 同时推进几个项目时，拖慢你的往往不是模型，而是旁边那个越开越沉的 IDEA：切窗口、等索引。dsh-idea 把文件、编辑、跳转和多仓库 Git 放进 DeepSeek Harness 的右栏。Agent 在写，你在同一块屏幕上看、改、提交，不用为了看一眼代码再跳回 IDEA。它跑在 PWA 里，几乎不额外占资源，就是为了在这条工作流里把 IDEA 换掉。
+
+![编辑器与文件树](screenshots/editor.webp)
+
+![搜索文件与 Git](screenshots/search-git.webp)
 
 ## 安装
 
@@ -31,3 +35,7 @@ dsh plugin --profile web add /absolute/path/to/dsh-idea
 - Git：分支与历史、diff、提交、拉取、推送。工作区根如果是仓库会管理它；下一层各自带 `.git` 的目录也会列出，在面板里切换
 - 快捷操作：状态栏打开快捷键列表，点击按键重新录制，也可清除或恢复默认
 - 选中文件内容后，用快捷键把选区 @ 到对话（默认 `⌥⌘I` / `Ctrl+Alt+I`）；没有选区时引用当前文件
+
+## 许可证
+
+[MIT](LICENSE)
