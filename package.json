@@ -1,7 +1,7 @@
 {
   "name": "dsh-idea",
-  "version": "1.5.2",
-  "description": "A minimal IDEA for the DSH right column: files, editor, search, and Git.",
+  "version": "1.6.1",
+  "description": "A minimal IDEA for the DSH right column: files, editor, search, Git, and the Run panel.",
   "type": "module",
   "main": "lib/index.js",
   "exports": {

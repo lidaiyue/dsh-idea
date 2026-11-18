@@ -31,6 +31,7 @@ dsh plugin --profile web add /absolute/path/to/dsh-idea
   - Java：安装 `jdtls`
   - Lua：安装 `lua-language-server`
 - Git：分支与历史、diff、提交、拉取、推送。工作区根如果是仓库会管理它；下一层各自带 `.git` 的目录也会列出，在面板里切换
+- 运行面板：启动和停止自动发现的应用（Maven/Gradle 的 Spring Boot、JS monorepo 里具体的 dev 脚本、并列的独立前端）以及 `.dsh/run.json` 里声明的项。Option+F12 / Alt+F12 开关面板
 - 快捷操作：状态栏打开快捷键列表，点击按键重新录制，也可清除或恢复默认。键位存在本插件里，不依赖其他插件
 - 选中文件内容后，用快捷键把选区 @ 到对话（默认 `⌥⌘I` / `Ctrl+Alt+I`）；没有选区时引用当前文件
 
