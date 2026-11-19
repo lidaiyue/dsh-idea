@@ -1,7 +1,7 @@
 {
   "name": "dsh-idea",
   "version": "1.6.1",
-  "description": "A minimal IDEA for the DSH right column: files, editor, search, Git, and the Run panel.",
+  "description": "A minimal IDEA for the DSH right column: files, editor, search, Git, the Run panel, and the Database explorer.",
   "type": "module",
   "main": "lib/index.js",
   "exports": {
@@ -38,21 +38,39 @@
   "author": "lidaiyue",
   "peerDependencies": {
     "react": "^18.2.0",
-    "@deepseek-ai/dsh-llm": "^0.1.5-rc.2 || ^0.2.0-rc.1"
+    "@deepseek-ai/dsh-llm": "^0.1.5-rc.2 || ^0.2.0-rc.1",
+    "@deepseek-ai/dsh-credentials": "^0.1.5-rc.2 || ^0.2.0-rc.1"
   },
   "peerDependenciesMeta": {
     "@deepseek-ai/dsh-llm": {
       "optional": true
+    },
+    "@deepseek-ai/dsh-credentials": {
+      "optional": true
     }
   },
   "scripts": {
-    "test": "node --test test/*.test.js"
+    "test": "node --test test/*.test.js",
+    "build:vendor:database": "node scripts/database/build-vendor.mjs"
   },
   "keywords": [
     "dsh",
     "dsh-plugin",
     "deepseek-harness",
     "editor",
-    "coteditor"
-  ]
+    "coteditor",
+    "database",
+    "postgres",
+    "mysql",
+    "redis",
+    "oracle"
+  ],
+  "dependencies": {
+    "ioredis": "^5.8.2",
+    "mysql2": "^3.15.3",
+    "pg": "^8.16.3"
+  },
+  "optionalDependencies": {
+    "oracledb": "^6.9.0"
+  }
 }
