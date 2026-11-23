@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, realpath, rm, writeFile } from "node:fs/promises";
 import { createServer } from "node:net";
 import { homedir, tmpdir } from "node:os";
 import { join } from "node:path";
@@ -257,8 +257,7 @@ test("an announced port becomes the run's port and readiness follows the socket"
   try {
     await runner.start("/tmp", { ...ENTRY, port: port });
     assert.equal(runner.tail("/tmp", "app", { stdout: 0, stderr: 0 }).phase, "starting");
-    // The probe runs on its own timer; one beat is enough for a listening port.
-    await new Promise((resolve) => setTimeout(resolve, 900));
+    await waitUntil(() => runner.tail("/tmp", "app", { stdout: 0, stderr: 0 })?.phase === "ready", 1500);
     const tail = runner.tail("/tmp", "app", { stdout: 0, stderr: 0 });
     assert.equal(tail.port, port);
     assert.equal(tail.phase, "ready");
@@ -274,7 +273,7 @@ test("an application that announces its port on stdout is picked up", async () =
   try {
     await runner.start("/tmp", ENTRY);
     shell.started[0].write("Tomcat started on port(s): 18080 (http) with context path ''\n");
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    await waitUntil(() => runner.tail("/tmp", "app", { stdout: 0, stderr: 0 })?.port === 18080, 1000);
     const tail = runner.tail("/tmp", "app", { stdout: 0, stderr: 0 });
     assert.equal(tail.port, 18080);
     assert.equal(tail.phase, "starting");
@@ -756,6 +755,29 @@ test("discovery reads Gradle include lines that use a leading colon", async () =
   }
 });
 
+test("Java runs grant ~/.msp so mapstruct-plus can write its increment mark", async () => {
+  const root = await workspace();
+  try {
+    await put(root, "pom.xml", "<project/>");
+    await put(root, "src/main/java/com/example/DemoApplication.java",
+      "package com.example;\n@SpringBootApplication\npublic class DemoApplication {}\n");
+    await put(root, "settings.gradle", "include ':api'\n");
+    await put(root, "api/build.gradle", "plugins { id 'org.springframework.boot' }\n");
+    await put(root, "api/src/main/java/com/example/ApiApplication.java",
+      "package com.example;\n@SpringBootApplication\npublic class ApiApplication {}\n");
+
+    const document = await resolveRuns(root, true);
+    const msp = await realpath(join(homedir(), ".msp"));
+    for (const id of ["maven:.", "gradle:api"]) {
+      const run = document.runs.find((item) => item.id === id);
+      assert.ok(run, id);
+      assert.ok(run.writableRoots.includes(msp), id);
+    }
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
 test("discovery follows a two-level Maven reactor and skips aggregator modules", async () => {
   const root = await workspace();
   try {
@@ -797,6 +819,7 @@ test("discovery finds Maven and package.json projects under a workspace parent",
 
     const document = await resolveRuns(root, true);
     const byId = new Map(document.runs.map((run) => [run.id, run]));
+    assert.equal(byId.get("script:web/dev").name, "web");
     assert.equal(byId.get("script:web/dev").command, "npm run dev");
     assert.equal(byId.get("script:web/dev").cwd, join(root, "web"));
     assert.equal(byId.has("script:web/test"), false);
@@ -831,10 +854,12 @@ test("discovery keeps one dev-like script per package.json and skips build-only 
     assert.equal(scripts.length, 2);
     assert.equal(byId.has("script:start"), false);
     assert.equal(byId.has("script:dev"), false);
+    assert.equal(byId.get("script:web/start").name, "web");
     assert.equal(byId.get("script:web/start").command, "npm run start");
     assert.equal(byId.get("script:web/start").cwd, join(root, "web"));
     assert.equal(byId.has("script:web/dev:app"), false);
     assert.equal(byId.has("script:web/serve"), false);
+    assert.equal(byId.get("script:admin/dev:legacy").name, "admin");
     assert.equal(byId.get("script:admin/dev:legacy").command, "npm run dev:legacy");
     assert.equal(byId.get("script:admin/dev:legacy").cwd, join(root, "admin"));
     assert.equal(byId.has("script:admin/start:app"), false);
@@ -912,7 +937,7 @@ test("discovery skips turbo-run and lists concrete monorepo apps", async () => {
     assert.equal(maven.length, 1);
     assert.equal(maven[0].name, "BNGSApplication");
     assert.equal(scripts.length, 2);
-    assert.equal(byId.get("script:web/dev:antd").name, "dev:antd");
+    assert.equal(byId.get("script:web/dev:antd").name, "web-antd");
     assert.equal(byId.get("script:web/dev:antd").command, "pnpm run dev:antd");
     assert.equal(byId.get("script:web/dev:antd").cwd, join(root, "web"));
     assert.equal(byId.get("script:web/ie-supplement").name, "ie-supplement");
@@ -936,7 +961,7 @@ test("discovery skips turbo-run and lists concrete monorepo apps", async () => {
 test("discovery still lists one script per sibling frontend outside a monorepo", async () => {
   const root = await workspace();
   try {
-    await put(root, "mmcp_web/package.json", JSON.stringify({ scripts: { dev: "vite", build: "vite build" } }));
+    await put(root, "mmcp_web/package.json", JSON.stringify({ name: "@acme/portal", scripts: { dev: "vite", build: "vite build" } }));
     await put(root, "mmcp/admin_web/package.json", JSON.stringify({ scripts: { dev: "vite", lint: "eslint" } }));
     await put(root, "backend/pom.xml", "<project/>");
     await put(root, "backend/src/main/java/com/example/ApiApplication.java",
@@ -946,7 +971,9 @@ test("discovery still lists one script per sibling frontend outside a monorepo",
     const scripts = document.runs.filter((run) => run.source === "package.json");
     const byId = new Map(document.runs.map((run) => [run.id, run]));
     assert.equal(scripts.length, 2);
+    assert.equal(byId.get("script:mmcp_web/dev").name, "portal");
     assert.equal(byId.get("script:mmcp_web/dev").cwd, join(root, "mmcp_web"));
+    assert.equal(byId.get("script:mmcp/admin_web/dev").name, "admin_web");
     assert.equal(byId.get("script:mmcp/admin_web/dev").cwd, join(root, "mmcp", "admin_web"));
     assert.equal(byId.get("maven:backend").name, "ApiApplication");
   } finally {
@@ -1034,6 +1061,13 @@ test("run.json rejects a cwd or writable root outside the workspace, and unsafe 
     assert.equal(allowed.runs.length, 1);
     assert.equal(allowed.runs[0].writableRoots[0], join(homedir(), ".m2"));
     assert.equal(allowed.runs[0].cwd, root);
+
+    // The grant discovery adds for mapstruct-plus must survive a run.json round trip.
+    await writeFile(join(root, ".dsh", "run.json"), JSON.stringify({
+      runs: [{ name: "mapstruct", command: "pwd", writableRoots: ["~/.msp"] }]
+    }), "utf8");
+    const msp = await loadRuns(root);
+    assert.equal(msp.runs[0].writableRoots[0], join(homedir(), ".msp"));
   } finally {
     await rm(root, { recursive: true, force: true });
   }

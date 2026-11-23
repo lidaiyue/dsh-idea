@@ -28,7 +28,7 @@ dsh plugin --profile web add /absolute/path/to/dsh-idea
   - Rust：`rustup component add rust-analyzer`
   - Go：`go install golang.org/x/tools/gopls@latest`
   - C / C++：安装 `clangd`（一般随 LLVM）
-  - Java：安装 `jdtls`
+  - Java：安装 `jindex`（[java-index](https://github.com/slgobinath/java-index)）
   - Lua：安装 `lua-language-server`
 - Git：分支与历史、diff、提交、拉取、推送。工作区根如果是仓库会管理它；下一层各自带 `.git` 的目录也会列出，在面板里切换
 - 运行面板：启动和停止自动发现的应用（Maven/Gradle 的 Spring Boot、JS monorepo 里具体的 dev 脚本、并列的独立前端）以及 `.dsh/run.json` 里声明的项。Option+F12 / Alt+F12 开关面板

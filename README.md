@@ -28,7 +28,7 @@ Restart `dsh web`, then refresh the page.
   - Rust: `rustup component add rust-analyzer`
   - Go: `go install golang.org/x/tools/gopls@latest`
   - C / C++: install `clangd` (usually with LLVM)
-  - Java: install `jdtls`
+  - Java: install `jindex` ([java-index](https://github.com/slgobinath/java-index))
   - Lua: install `lua-language-server`
 - Git: branches and history, diff, commit, pull, and push. The workspace root is included when it is a repository. Immediate child directories with their own `.git` are listed too, and the panel switches between them
 - Run panel: start and stop discovered applications (Maven/Gradle Spring Boot, concrete JS monorepo dev servers, sibling frontends) and entries in `.dsh/run.json`. Option+F12 / Alt+F12 toggles it
