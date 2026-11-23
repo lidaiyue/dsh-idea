@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -52,5 +52,26 @@ test("locationsInside keeps paths inside root and attachLineText fills them", as
     assert.equal(out[0].text, "void use() { foo(); }");
   } finally {
     await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("attachLineText refuses a workspace symlink onto a secret directory", async () => {
+  const root = await mkdtemp(join(tmpdir(), "dsh-idea-sym-"));
+  const outside = await mkdtemp(join(tmpdir(), "dsh-idea-sym-out-"));
+  try {
+    await mkdir(join(root, ".git"));
+    await writeFile(join(root, ".git", "config"), "url = https://user:token@example\n", "utf8");
+    await symlink(join(root, ".git", "config"), join(root, "notes.md"));
+    await writeFile(join(outside, "id_rsa"), "private\n", "utf8");
+    await symlink(join(outside, "id_rsa"), join(root, "key.md"));
+    const out = await attachLineText(root, [
+      { rel: "notes.md", line: 0, character: 0 },
+      { rel: "key.md", line: 0, character: 0 },
+    ]);
+    assert.equal(out[0].text, undefined);
+    assert.equal(out[1].text, undefined);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+    await rm(outside, { recursive: true, force: true });
   }
 });

@@ -30,3 +30,18 @@ test("git pull ref rejects option-shaped segments at every level", () => {
   // refIssue alone does not catch a "-"-leading segment; pullArgs must.
   assert.equal(refIssue("origin/--upload-pack=/x"), "");
 });
+
+test("executable comments cannot hide a DROP behind another statement", () => {
+  const payloads = [
+    "/*!50000 SELECT 1; DROP TABLE users */",
+    "SELECT 1 /*!50000; DROP TABLE users */",
+    "INSERT INTO t VALUES (1) /*! ; DROP TABLE users */",
+    "SELECT 1 /*M! ; DROP TABLE users */",
+    "/*M!100100 DROP TABLE users */",
+  ];
+  for (const sql of payloads) {
+    const parts = splitSql(sql, "mysql");
+    assert.equal(destructiveStatements(parts, "mysql").length, 1, sql);
+  }
+  assert.equal(destructiveStatements(splitSql("SELECT 1 /* not a drop */", "mysql"), "mysql").length, 0);
+});

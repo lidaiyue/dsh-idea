@@ -195,6 +195,35 @@ test("oracle PL/SQL blocks and q-quotes stay one statement", () => {
   );
   assert.equal(looksLikeSelect("-- list\nSELECT * FROM t"), true);
   assert.equal(destructiveStatements(splitSql(block, "oracle")).length, 0);
+
+  const proc = "CREATE OR REPLACE PROCEDURE p AS\nBEGIN\n  NULL;\nEND;\nSELECT 1 FROM dual;";
+  const procParts = splitSql(proc, "oracle");
+  assert.equal(procParts.length, 2);
+  assert.equal(procParts[0].endsWith("END;"), true);
+  assert.equal(statementForExecute("oracle", procParts[0]).endsWith("END;"), true);
+  assert.equal(procParts[1], "SELECT 1 FROM dual");
+  assert.equal(isOraclePlsql(procParts[0]), true);
+
+  assert.deepEqual(
+    splitSql("CREATE TYPE person_typ AS OBJECT (a NUMBER);\nSELECT 1 FROM dual;", "oracle"),
+    ["CREATE TYPE person_typ AS OBJECT (a NUMBER)", "SELECT 1 FROM dual"],
+  );
+  assert.equal(isOraclePlsql("CREATE TYPE person_typ AS OBJECT (a NUMBER);"), false);
+  assert.equal(statementForExecute("oracle", "CREATE LIBRARY lib AS '/tmp/x.so';"), "CREATE LIBRARY lib AS '/tmp/x.so'");
+  assert.deepEqual(
+    splitSql("CREATE LIBRARY lib AS '/tmp/x.so';\nSELECT 1 FROM dual;", "oracle"),
+    ["CREATE LIBRARY lib AS '/tmp/x.so'", "SELECT 1 FROM dual"],
+  );
+  assert.deepEqual(
+    splitSql("CREATE TRIGGER t BEFORE INSERT ON x FOR EACH ROW CALL p;\nSELECT 1 FROM dual;", "oracle"),
+    ["CREATE TRIGGER t BEFORE INSERT ON x FOR EACH ROW CALL p", "SELECT 1 FROM dual"],
+  );
+  const trig = "CREATE TRIGGER t BEFORE INSERT ON x FOR EACH ROW\nBEGIN\n  NULL;\nEND;\nSELECT 1 FROM dual;";
+  const trigParts = splitSql(trig, "oracle");
+  assert.equal(trigParts.length, 2);
+  assert.equal(trigParts[0].endsWith("END;"), true);
+  assert.equal(statementForExecute("oracle", trigParts[0]).endsWith("END;"), true);
+  assert.equal(isOraclePlsql("CREATE OR REPLACE TYPE BODY t AS\n  MEMBER PROCEDURE p;\nEND;"), true);
 });
 
 test("sql console posts a script instead of splitting PL/SQL locally", () => {
