@@ -30,6 +30,8 @@ import {
   schemaNamesOf,
   splitSql,
   statementCommand,
+  statementForExecute,
+  isOraclePlsql,
   looksLikeSelect,
 } from "../lib/database/sql.js";
 
@@ -133,6 +135,76 @@ test("SQL helpers quote, page, and classify statements", () => {
   assert.match(boundedSelect("postgres", "select * from t", 50), /limit\s+51/i);
   const statements = splitSql("select 1; drop table t; update t set a = 1;", "postgres");
   assert.deepEqual(destructiveStatements(statements), ["drop table t"]);
+});
+
+
+test("oracle PL/SQL blocks and q-quotes stay one statement", () => {
+  const block = [
+    "DECLARE",
+    "  v_id VARCHAR2(64) := 'AI';",
+    "  v_prompt CLOB := q'[a; b'' ; -- keep]';",
+    "BEGIN",
+    "  NULL;",
+    "END;",
+  ].join("\n");
+  const parts = splitSql(block, "oracle");
+  assert.equal(parts.length, 1);
+  assert.equal(parts[0].endsWith("END;"), true);
+  assert.equal(parts[0].includes("-- keep"), true);
+  assert.equal(parts[0].includes("a; b"), true);
+  assert.equal(statementForExecute("oracle", parts[0]).endsWith("END;"), true);
+  assert.equal(statementForExecute("oracle", "select 1 from dual;"), "select 1 from dual");
+  assert.equal(isOraclePlsql("-- head\nBEGIN NULL; END;"), true);
+  assert.equal(isOraclePlsql("CREATE TABLE t (a NUMBER);"), false);
+
+  const nested = [
+    "BEGIN",
+    "  IF 1 = 1 THEN",
+    "    BEGIN",
+    "      NULL;",
+    "    END;",
+    "  END IF;",
+    "  x := CASE WHEN 1 THEN 2 END;",
+    "  y := 3;",
+    "END;",
+  ].join("\n");
+  assert.equal(splitSql(nested, "oracle").length, 1);
+
+  const declared = [
+    "DECLARE",
+    "  x NUMBER := CASE WHEN 1 THEN 2 END;",
+    "BEGIN",
+    "  NULL;",
+    "END;",
+  ].join("\n");
+  assert.equal(splitSql(declared, "oracle").length, 1);
+
+  const viaSlash = "BEGIN\n  NULL;\nEND\n/\nSELECT 1 FROM dual;";
+  assert.deepEqual(splitSql(viaSlash, "oracle"), ["BEGIN\n  NULL;\nEND;", "SELECT 1 FROM dual"]);
+
+  const pkg = "CREATE OR REPLACE PACKAGE BODY p AS\n  PROCEDURE x;\nEND p;\n/\nSELECT 1 FROM dual";
+  const pkgParts = splitSql(pkg, "oracle");
+  assert.equal(pkgParts.length, 2);
+  assert.equal(pkgParts[0].endsWith("END p;"), true);
+  assert.equal(pkgParts[1], "SELECT 1 FROM dual");
+
+  assert.deepEqual(splitSql("-- only\n/* a; b */\n", "oracle"), []);
+  assert.deepEqual(
+    splitSql("select 1 from dual; select 2 from dual;", "oracle"),
+    ["select 1 from dual", "select 2 from dual"],
+  );
+  assert.equal(looksLikeSelect("-- list\nSELECT * FROM t"), true);
+  assert.equal(destructiveStatements(splitSql(block, "oracle")).length, 0);
+});
+
+test("sql console posts a script instead of splitting PL/SQL locally", () => {
+  const client = read("lib/client.database.js");
+  const index = read("lib/database/index.js");
+  assert.match(client, /api\("\/script"/);
+  assert.match(index, /route === "\/script"/);
+  assert.equal(client.includes("function splitStatements"), false);
+  assert.match(client, /function closeAllTabs/);
+  assert.match(client, /closeAllTabs: "关闭全部"/);
 });
 
 test("idea wires the database module and keeps the legacy plugin surface", () => {

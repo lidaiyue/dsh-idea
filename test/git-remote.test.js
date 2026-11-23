@@ -64,6 +64,30 @@ test("pullArgs rebase and optional remote/branch ref", () => {
   assert.equal(pullArgs("/main", true).ok, false);
 });
 
+test("pullArgs rejects option-shaped ref segments (git argv injection)", () => {
+  const attacks = [
+    "origin/--upload-pack=/x",
+    "--upload-pack=/x/main",
+    "origin/-c",
+    "origin/--exec=x"
+  ];
+  for (const ref of attacks) {
+    const planned = pullArgs(ref, false);
+    assert.equal(planned.ok, false, ref);
+    assert.equal(planned.error, "ref-invalid", ref);
+    assert.equal(planned.args, undefined, ref);
+  }
+});
+
+test("doPull refuses a ref whose remote is not configured", async () => {
+  await withTemp("dsh-idea-pull-remote-", async (root) => {
+    await initRepo(root);
+    const result = await doPull(root, "ghost/main", {});
+    assert.equal(result.ok, false);
+    assert.equal(result.error, "ref-invalid");
+  });
+});
+
 test("pushArgs uses -u only when the branch is untracked", () => {
   assert.deepEqual(pushArgs({ tracked: true, branch: "main", remotes: ["origin"] }).args, ["push"]);
   assert.deepEqual(pushArgs({ tracked: false, branch: "main", remotes: ["origin"] }).args, ["push", "-u", "origin", "main"]);
