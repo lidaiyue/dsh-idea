@@ -4,9 +4,9 @@ English | [中文](README.zh-CN.md)
 
 A minimal IDEA in the DeepSeek Harness right column.
 
-When several agents are moving several projects at once, the slow part is usually not the model. It is the IDE you keep leaving for: another window, another index, another copy of IDEA per repo, and your grip on the code breaks. dsh-idea puts the files, the editor, navigation, and multi-repo Git in the DeepSeek Harness right column. The agent writes; you read, edit, and commit on the same screen, without jumping back to IDEA for a look. It runs in the PWA, adds almost no weight, and exists to take IDEA out of this workflow.
-
 ![File search and Git](screenshots/search-git.webp)
+
+![Database explorer](screenshots/database.webp)
 
 ## Install
 
@@ -32,8 +32,7 @@ Restart `dsh web`, then refresh the page.
   - Lua: install `lua-language-server`
 - Git: branches and history, diff, commit, pull, and push. The workspace root is included when it is a repository. Immediate child directories with their own `.git` are listed too, and the panel switches between them
 - Run panel: start and stop discovered applications (Maven/Gradle Spring Boot, concrete JS monorepo dev servers, sibling frontends) and entries in `.dsh/run.json`. Option+F12 / Alt+F12 toggles it
-- Run `.sql` from the editor: open a SQL file and press Run in its file bar, or `⌘⏎` / `Ctrl+⏎` (the console's own chord; rebindable). The script opens as its own SQL console — pick the connection and database on the console toolbar, the same pickers every console has, and the choice binds to the file; a `-- datasource:` header or an earlier run selects it automatically. The script runs in the SQL console and its result lands in the results panel. The connection comes from the file's `-- @dsh-connection` line (written by this plugin), a JetBrains-style `-- datasource: <name>` header, or the only connection; with none of those the console opens unbound for you to pick one, and nothing runs until you do. Every run re-reads the file, so what executes is the saved script.
-- Shortcuts: open the list from the status bar, click a binding to record it, or clear and restore the default. Bindings stay in this plugin and do not depend on another one
+- Database explorer: connect to PostgreSQL, MySQL, Oracle, or Redis. Browse schemas, tables, and columns; preview data in the grid and edit it in place, cell by cell or by inserting a row; export a table, a schema, or a whole database as SQL (Redis as JSON), or run a script to import it back. Each connection opens a SQL console, and Redis gets key browsing and a command console. Passwords live in the DSH credential store
 - Select text in a file and mention that range in chat with a shortcut (default `⌥⌘I` / `Ctrl+Alt+I`). With no selection, the shortcut mentions the current file
 
 ## License
