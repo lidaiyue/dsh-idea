@@ -18,7 +18,7 @@ dsh plugin --profile web add /absolute/path/to/dsh-idea
 
 ## 特性
 
-- 工作区文件树：按层浏览，新建、重命名、删除文件和文件夹
+- 工作区文件树：按层浏览，新建、重命名、删除文件和文件夹；文件和文件夹可复制、剪切、粘贴（同目录内复制自动编号，不会覆盖），从访达或资源管理器拖入或粘贴文件、整个文件夹即导入工作区
 - 文本编辑：语法着色、查找、保存
 - Markdown 预览，可在预览和源码之间切换
 - 支持搜索文件名及文件内容跳转
@@ -32,8 +32,16 @@ dsh plugin --profile web add /absolute/path/to/dsh-idea
   - Lua：安装 `lua-language-server`
 - Git：分支与历史、diff、提交、拉取、推送。工作区根如果是仓库会管理它；下一层各自带 `.git` 的目录也会列出，在面板里切换
 - 运行面板：启动和停止自动发现的应用（Maven/Gradle 的 Spring Boot、JS monorepo 里具体的 dev 脚本、并列的独立前端）以及 `.dsh/run.json` 里声明的项。Option+F12 / Alt+F12 开关面板
-- 数据库面板：连接 PostgreSQL、MySQL、Oracle、Redis。逐层浏览模式、表和字段；在表格里预览数据，直接改单元格或新增行；把一张表、一个模式或整个库导出成 SQL（Redis 导出为 JSON），或运行脚本导入。每个连接可开一个 SQL 控制台，Redis 则是键浏览和命令控制台。密码存在 DSH 凭据库里
+- 数据库面板：连接 PostgreSQL、MySQL、Oracle、Redis。逐层浏览模式、表和字段；在表格里预览数据，直接改单元格或新增行；把一张表、一个模式或整个库导出成 SQL（Redis 导出为 JSON），或运行脚本导入。每个连接可开一个 SQL 控制台，Redis 则是键浏览和命令控制台。密码存在 DSH 凭据库里；宿主没有凭据服务时退回 `~/.dsh/database-connections.json`
 - 选中文件内容后，用快捷键把选区 @ 到对话（默认 `⌥⌘I` / `Ctrl+Alt+I`）；没有选区时引用当前文件
+
+## 工作区边界
+
+所有面板都只能访问宿主已经打开过的目录：Workspace 注册表、在线会话的工作目录，以及沙箱策略里的根。请求指向其它目录时，会在动任何一个文件之前返回 `403 cwd-not-workspace`；DSH 写在 `~/.dsh` 下的凭据文件也不会被编辑器读到或搜到。
+
+如果部署的工作区来自别处，可以用 `DSH_IDEA_EXTRA_ROOTS` 追加根目录（路径列表，POSIX 用 `:`，Windows 用 `;`）。
+
+数据库面板在空闲时加载，不占首屏；打开面板、按它的快捷键，或上一次会话就停在该面板，都会立即加载。
 
 ## 许可证
 

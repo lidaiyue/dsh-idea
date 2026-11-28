@@ -239,7 +239,7 @@ test("sql console posts a script instead of splitting PL/SQL locally", () => {
 test("idea wires the database module and keeps the legacy plugin surface", () => {
   const index = read("lib/index.js");
   assert.match(index, /apply as applyDatabase/);
-  assert.match(index, /applyDatabase\(ctx\)/);
+  assert.match(index, /applyDatabase\(ctx, gate\)/);
   const client = read("lib/client.js");
   assert.match(client, /bootChunk\("client\.database\.js"\)/);
   assert.match(client, /const DATABASE_KEYS_KEY = "dsh\.database\.keys"/);
